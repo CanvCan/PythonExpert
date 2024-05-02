@@ -1,3 +1,21 @@
+/*
+This program is a simple lexical analyzer (also known as a lexer or tokenizer) implemented in C.
+It reads a source code file character by character, tokenizes it into a series of tokens, and writes these tokens to an output file.
+
+Each token represents a meaningful component of the source code. These components can be an identifier, keyword, operator, or constant.
+
+The lexer uses the getNextChar function to read the source code one character at a time.
+It then uses this character to determine the type of the next token.
+
+For instance, if the character is a letter, the lexer treats it as the start of an identifier.
+It then reads subsequent characters until it finds a character that is not a letter or digit, marking the end of the identifier.
+
+Similarly, if the character is a digit, the lexer treats it as the start of an integer constant.
+It then reads subsequent digits until it finds a non-digit character, marking the end of the integer constant.
+
+The lexer also handles whitespace and comments, skipping over them to find the next token.
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,7 +24,10 @@
 #define MAX_IDENTIFIER_LENGTH 10
 #define MAX_INTEGER_LENGTH 8
 #define MAX_STRING_LENGTH 256
+#define BUFFER_SIZE 256
 
+char buffer[BUFFER_SIZE];
+int bufferIndex = 0;
 typedef enum
 {
     IDENTIFIER,
@@ -54,6 +75,42 @@ void closeFiles()
     fclose(outputFilePtr);
 }
 
+void printTokenToSourceFile(Token token)
+{
+    switch (token.type)
+    {
+    case IDENTIFIER:
+        fprintf(outputFilePtr, "Identifier: %s\n", token.value);
+        break;
+    case INT_CONST:
+        fprintf(outputFilePtr, "Integer constant: %s\n", token.value);
+        break;
+    case OPERATOR:
+        fprintf(outputFilePtr, "Operator: %s\n", token.value);
+        break;
+    case LEFT_CURLY_BRACKET:
+        fprintf(outputFilePtr, "Left curly bracket: %s\n", token.value);
+        break;
+    case RIGHT_CURLY_BRACKET:
+        fprintf(outputFilePtr, "Right curly bracket: %s\n", token.value);
+        break;
+    case STRING_CONST:
+        fprintf(outputFilePtr, "String constant: %s\n", token.value);
+        break;
+    case KEYWORD:
+        fprintf(outputFilePtr, "Keyword: %s\n", token.value);
+        break;
+    case END_OF_LINE:
+        fprintf(outputFilePtr, "End of line: %s\n", token.value);
+        break;
+    case COMMA:
+        fprintf(outputFilePtr, "Comma: %s\n", token.value);
+        break;
+    default:
+        break;
+    }
+}
+
 void getNextChar()
 {
     do
@@ -75,10 +132,10 @@ void skipComments()
     if (currentChar == '/')
     {
         getNextChar();
-        if (currentChar == '*')
+        if (currentChar == '*') 
         {
             getNextChar();
-            while (1)
+            while (!feof(sourceFilePtr))
             {
                 if (currentChar == '*')
                 {
@@ -94,6 +151,18 @@ void skipComments()
                     getNextChar();
                 }
             }
+
+            exit(EXIT_FAILURE);
+        }
+        else
+        {
+            Token token;
+            printf("Current char: /");
+            token.type = OPERATOR;
+            token.value[0] = (char)'/';
+            token.value[1] = '\0';
+            printTokenToSourceFile(token);
+            getNextChar();
         }
     }
 }
@@ -118,7 +187,7 @@ Token getNextToken()
         while (isalnum(currentChar) || currentChar == '_')
         {
             token.value[i++] = currentChar;
-            if (i >= MAX_IDENTIFIER_LENGTH)
+            if (i > MAX_IDENTIFIER_LENGTH)
             {
                 fprintf(stderr, "Error: Identifier exceeds maximum length\n");
                 exit(EXIT_FAILURE);
@@ -193,6 +262,7 @@ Token getNextToken()
     }
     else if (currentChar == '+' || currentChar == '-' || currentChar == '*' || currentChar == '/')
     {
+        printf("Current char: %c\n", currentChar);
         token.type = OPERATOR;
         token.value[i++] = (char)currentChar;
         token.value[i] = '\0';
@@ -221,44 +291,6 @@ Token getNextToken()
     return token;
 }
 
-void printToken(Token token)
-{
-    // fprintf(outputFilePtr, "Token: %u, Value: %s\n", token.type, token.value);
-
-    switch (token.type)
-    {
-    case IDENTIFIER:
-        fprintf(outputFilePtr, "Identifier: %s\n", token.value);
-        break;
-    case INT_CONST:
-        fprintf(outputFilePtr, "Integer constant: %s\n", token.value);
-        break;
-    case OPERATOR:
-        fprintf(outputFilePtr, "Operator: %s\n", token.value);
-        break;
-    case LEFT_CURLY_BRACKET:
-        fprintf(outputFilePtr, "Left curly bracket: %s\n", token.value);
-        break;
-    case RIGHT_CURLY_BRACKET:
-        fprintf(outputFilePtr, "Right curly bracket: %s\n", token.value);
-        break;
-    case STRING_CONST:
-        fprintf(outputFilePtr, "String constant: %s\n", token.value);
-        break;
-    case KEYWORD:
-        fprintf(outputFilePtr, "Keyword: %s\n", token.value);
-        break;
-    case END_OF_LINE:
-        fprintf(outputFilePtr, "End of line: %s\n", token.value);
-        break;
-    case COMMA:
-        fprintf(outputFilePtr, "Comma: %s\n", token.value);
-        break;
-    default:
-        break;
-    }
-}
-
 int main(int argc, char *argv[])
 {
     char *sourceFile;
@@ -266,8 +298,8 @@ int main(int argc, char *argv[])
 
     if (argc != 3)
     {
-        sourceFile = "C:\\star files\\code.sta";
-        outputFile = "C:\\star files\\code.lex";
+        sourceFile = "../src/code.sta";
+        outputFile = "../src/code.lex";
     }
     else
     {
@@ -283,8 +315,7 @@ int main(int argc, char *argv[])
     while (!feof(sourceFilePtr))
     {
         currentToken = getNextToken();
-        // printf("Token: %u, Value: %s\n", currentToken.type, currentToken.value);
-        printToken(currentToken);
+        printTokenToSourceFile(currentToken);
     }
 
     closeFiles();
