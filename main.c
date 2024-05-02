@@ -77,6 +77,8 @@ void closeFiles()
 
 void printTokenToSourceFile(Token token)
 {
+    // fprintf(outputFilePtr, "Token: %u, Value: %s\n", token.type, token.value);
+
     switch (token.type)
     {
     case IDENTIFIER:
@@ -132,8 +134,9 @@ void skipComments()
     if (currentChar == '/')
     {
         getNextChar();
-        if (currentChar == '*') 
+        if (currentChar == '*') // Block comment
         {
+            int commentEnd = 0;
             getNextChar();
             while (!feof(sourceFilePtr))
             {
@@ -143,6 +146,7 @@ void skipComments()
                     if (currentChar == '/')
                     {
                         getNextChar();
+                        commentEnd = 1;
                         break;
                     }
                 }
@@ -152,7 +156,11 @@ void skipComments()
                 }
             }
 
-            exit(EXIT_FAILURE);
+            if (!commentEnd)
+            {
+                fprintf(stderr, "Error: Block comment does not terminate before file end\n");
+                exit(EXIT_FAILURE);
+            }
         }
         else
         {
@@ -298,6 +306,7 @@ int main(int argc, char *argv[])
 
     if (argc != 3)
     {
+        // Default source and output file paths
         sourceFile = "../src/code.sta";
         outputFile = "../src/code.lex";
     }
