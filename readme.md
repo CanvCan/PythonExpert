@@ -84,9 +84,14 @@ The `skipComments` method is designed to handle comments within the source file.
 
 **How it Works**
 
-1) Check for Forward Slash: The method first verifies if currentChar is a forward slash (/).
-2) The method calls getNextChar again to check for the asterisk (*).
-3)  error handling asdfaf
+1) The method starts by checking if the current character (`currentChar`) is a forward slash (`/`).
+2) If `currentChar` is a forward slash, the `getNextChar` method is called to read the next character.
+If the next character is an asterisk (`*`), it's a confirmed block comment.
+The method enters a `while` loop that continues until the end of the block comment is found.
+3) The code searches for an asterisk (`*`) followed by a forward slash (`/`) to mark the end of the block comment.
+If the ending sequence (`* /`) is found, the loop breaks, and `getNextChar` is called to skip past the closing characters (the asterisk and slash). This ensures the next character processed is the one following the comment.
+If the ending sequence is not yet encountered, `getNextChar` is called again to read the next character and continue iterating through the comment.
+4) If the end of the file (`feof(sourceFilePtr)`) is reached before finding the closing sequence, an error message is printed indicating an unterminated block comment. The program exits with an error code (`EXIT_FAILURE`) to signal the problem.
 
 **Code Breakdown:**
 
@@ -124,5 +129,99 @@ void skipComments() {
       getNextChar();
     }
   }
+}
+```
+
+
+
+**Determining the Token**
+
+The `getNextToken` function is the core of the lexical analyzer. It reads the source code character by character and identifies the next meaningful element (token) in the code. This token could be a keyword, identifier, integer constant, string constant, operator, punctuation mark, or an indication of the end of the line.
+
+**How it Works**
+
+1) A `Token` struct is declared to hold the information about the identified token.
+2) An integer variable is used as an index to keep track of the position within the `token.value` array where characters of the token are stored.
+3) The code checks the value of `currentChar` to determine the type of token.
+4) After identifying the token type and populating the `token.value` array appropriately, the `getNextToken` function returns the `Token` struct containing the identified token information.
+
+**Code Breakdown:**
+
+```c
+Token getNextToken() {
+    Token token;
+    int i = 0;
+
+    skipWhiteSpace();
+    skipComments();
+
+    // ... (rest of the code as explained above)
+
+    return token;
+}
+```
+
+
+**Printing Token to Source File**
+
+The `printTokenToSourceFile` function is responsible for writing the details of a given `Token` struct to the output file opened by the `openFiles` method. This function helps create a human-readable representation of the identified tokens in the source code.
+
+**How it Works**
+
+1) The function takes a single argument token of type Token. This token struct contains the information about the token that needs to be printed to the output file.
+2) The switch statement examines the token.type field of the provided token struct. Depending on the type:
+
+
+**Code Breakdown:**
+
+```c
+void printTokenToSourceFile(Token token)
+{
+    switch (token.type)
+    {
+    case IDENTIFIER:
+        fprintf(outputFilePtr, "Identifier: %s\n", token.value);
+        break;
+    case INT_CONST:
+        fprintf(outputFilePtr, "Integer constant: %s\n", token.value);
+        break;
+    case OPERATOR:
+        fprintf(outputFilePtr, "Operator: %s\n", token.value);
+        break;
+    case LEFT_CURLY_BRACKET:
+        fprintf(outputFilePtr, "Left curly bracket: %s\n", token.value);
+        break;
+    case RIGHT_CURLY_BRACKET:
+        fprintf(outputFilePtr, "Right curly bracket: %s\n", token.value);
+        break;
+    case STRING_CONST:
+        fprintf(outputFilePtr, "String constant: %s\n", token.value);
+        break;
+    case KEYWORD:
+        fprintf(outputFilePtr, "Keyword: %s\n", token.value);
+        break;
+    case END_OF_LINE:
+        fprintf(outputFilePtr, "End of line: %s\n", token.value);
+        break;
+    case COMMA:
+        fprintf(outputFilePtr, "Comma: %s\n", token.value);
+        break;
+    default:
+        break;
+    }
+}
+```
+
+**Closing source and output files**
+
+Finally `closeFiles` method closes `sourceFilePtr` and `outputFilePtr` with `fclose` method.
+
+**Code Breakdown:**
+
+```c
+void closeFiles()
+{
+    fclose(sourceFilePtr);
+    fclose(outputFilePtr);
 }
 ```
