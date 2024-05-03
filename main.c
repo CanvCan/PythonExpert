@@ -28,6 +28,7 @@ The lexer also handles whitespace and comments, skipping over them to find the n
 
 char buffer[BUFFER_SIZE];
 int bufferIndex = 0;
+
 typedef enum
 {
     IDENTIFIER,
@@ -49,7 +50,7 @@ typedef struct
 
 FILE *sourceFilePtr;
 FILE *outputFilePtr;
-int currentChar;
+char currentChar;
 Token currentToken;
 
 void openFiles(char *sourceFileName, char *outputFileName)
@@ -81,35 +82,35 @@ void printTokenToSourceFile(Token token)
 
     switch (token.type)
     {
-    case IDENTIFIER:
-        fprintf(outputFilePtr, "Identifier: %s\n", token.value);
-        break;
-    case INT_CONST:
-        fprintf(outputFilePtr, "Integer constant: %s\n", token.value);
-        break;
-    case OPERATOR:
-        fprintf(outputFilePtr, "Operator: %s\n", token.value);
-        break;
-    case LEFT_CURLY_BRACKET:
-        fprintf(outputFilePtr, "Left curly bracket: %s\n", token.value);
-        break;
-    case RIGHT_CURLY_BRACKET:
-        fprintf(outputFilePtr, "Right curly bracket: %s\n", token.value);
-        break;
-    case STRING_CONST:
-        fprintf(outputFilePtr, "String constant: %s\n", token.value);
-        break;
-    case KEYWORD:
-        fprintf(outputFilePtr, "Keyword: %s\n", token.value);
-        break;
-    case END_OF_LINE:
-        fprintf(outputFilePtr, "End of line: %s\n", token.value);
-        break;
-    case COMMA:
-        fprintf(outputFilePtr, "Comma: %s\n", token.value);
-        break;
-    default:
-        break;
+        case IDENTIFIER:
+            fprintf(outputFilePtr, "Identifier: %s\n", token.value);
+            break;
+        case INT_CONST:
+            fprintf(outputFilePtr, "Integer constant: %s\n", token.value);
+            break;
+        case OPERATOR:
+            fprintf(outputFilePtr, "Operator: %s\n", token.value);
+            break;
+        case LEFT_CURLY_BRACKET:
+            fprintf(outputFilePtr, "Left curly bracket: %s\n", token.value);
+            break;
+        case RIGHT_CURLY_BRACKET:
+            fprintf(outputFilePtr, "Right curly bracket: %s\n", token.value);
+            break;
+        case STRING_CONST:
+            fprintf(outputFilePtr, "String constant: %s\n", token.value);
+            break;
+        case KEYWORD:
+            fprintf(outputFilePtr, "Keyword: %s\n", token.value);
+            break;
+        case END_OF_LINE:
+            fprintf(outputFilePtr, "End of line: %s\n", token.value);
+            break;
+        case COMMA:
+            fprintf(outputFilePtr, "Comma: %s\n", token.value);
+            break;
+        default:
+            break;
     }
 }
 
@@ -167,13 +168,29 @@ void skipComments()
             Token token;
             printf("Current char: /");
             token.type = OPERATOR;
-            token.value[0] = (char)'/';
+            token.value[0] = (char) '/';
             token.value[1] = '\0';
             printTokenToSourceFile(token);
             getNextChar();
         }
     }
 }
+
+void controlBracketNumber(int bracketCount)
+{
+    if (bracketCount > 0)
+    {
+        fprintf(stderr, "Error: Closing bracket expected.\n");
+        exit(EXIT_FAILURE);
+    }
+    else if (bracketCount < 0)
+    {
+        fprintf(stderr, "Error: Opening bracket expected.\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+int bracketCount = 0;
 
 Token getNextToken()
 {
@@ -249,7 +266,7 @@ Token getNextToken()
             fprintf(stderr, "Error: String constant exceeds maximum length\n");
             exit(EXIT_FAILURE);
         }
-        token.value[i++] = (char)currentChar;
+        token.value[i++] = (char) currentChar;
         token.value[i] = '\0';
         token.type = STRING_CONST;
         getNextChar();
@@ -257,36 +274,38 @@ Token getNextToken()
     else if (currentChar == '{')
     {
         token.type = LEFT_CURLY_BRACKET;
-        token.value[i++] = (char)currentChar;
+        token.value[i++] = (char) currentChar;
         token.value[i] = '\0';
+        bracketCount++;
         getNextChar();
     }
     else if (currentChar == '}')
     {
         token.type = RIGHT_CURLY_BRACKET;
-        token.value[i++] = (char)currentChar;
+        token.value[i++] = (char) currentChar;
         token.value[i] = '\0';
+        bracketCount--;
         getNextChar();
     }
     else if (currentChar == '+' || currentChar == '-' || currentChar == '*' || currentChar == '/')
     {
         printf("Current char: %c\n", currentChar);
         token.type = OPERATOR;
-        token.value[i++] = (char)currentChar;
+        token.value[i++] = (char) currentChar;
         token.value[i] = '\0';
         getNextChar();
     }
     else if (currentChar == '.')
     {
         token.type = END_OF_LINE;
-        token.value[i++] = (char)currentChar;
+        token.value[i++] = (char) currentChar;
         token.value[i] = '\0';
         getNextChar();
     }
     else if (currentChar == ',')
     {
         token.type = COMMA;
-        token.value[i++] = (char)currentChar;
+        token.value[i++] = (char) currentChar;
         token.value[i] = '\0';
         getNextChar();
     }
@@ -327,6 +346,7 @@ int main(int argc, char *argv[])
         printTokenToSourceFile(currentToken);
     }
 
+    controlBracketNumber(bracketCount);
     closeFiles();
     return 0;
 }
