@@ -50,7 +50,7 @@ typedef struct
 
 FILE *sourceFilePtr;
 FILE *outputFilePtr;
-char currentChar;
+int currentChar;
 Token currentToken;
 
 void openFiles(char *sourceFileName, char *outputFileName)
@@ -78,8 +78,6 @@ void closeFiles()
 
 void printTokenToSourceFile(Token token)
 {
-    // fprintf(outputFilePtr, "Token: %u, Value: %s\n", token.type, token.value);
-
     switch (token.type)
     {
         case IDENTIFIER:
@@ -135,7 +133,7 @@ void skipComments()
     if (currentChar == '/')
     {
         getNextChar();
-        if (currentChar == '*') // Block comment
+        if (currentChar == '*')
         {
             int commentEnd = 0;
             getNextChar();
@@ -168,7 +166,7 @@ void skipComments()
             Token token;
             printf("Current char: /");
             token.type = OPERATOR;
-            token.value[0] = (char) '/';
+            token.value[0] = (char)'/';
             token.value[1] = '\0';
             printTokenToSourceFile(token);
             getNextChar();
@@ -266,7 +264,7 @@ Token getNextToken()
             fprintf(stderr, "Error: String constant exceeds maximum length\n");
             exit(EXIT_FAILURE);
         }
-        token.value[i++] = (char) currentChar;
+        token.value[i++] = (char)currentChar;
         token.value[i] = '\0';
         token.type = STRING_CONST;
         getNextChar();
@@ -274,7 +272,7 @@ Token getNextToken()
     else if (currentChar == '{')
     {
         token.type = LEFT_CURLY_BRACKET;
-        token.value[i++] = (char) currentChar;
+        token.value[i++] = (char)currentChar;
         token.value[i] = '\0';
         bracketCount++;
         getNextChar();
@@ -282,7 +280,7 @@ Token getNextToken()
     else if (currentChar == '}')
     {
         token.type = RIGHT_CURLY_BRACKET;
-        token.value[i++] = (char) currentChar;
+        token.value[i++] = (char)currentChar;
         token.value[i] = '\0';
         bracketCount--;
         getNextChar();
@@ -291,21 +289,21 @@ Token getNextToken()
     {
         printf("Current char: %c\n", currentChar);
         token.type = OPERATOR;
-        token.value[i++] = (char) currentChar;
+        token.value[i++] = (char)currentChar;
         token.value[i] = '\0';
         getNextChar();
     }
     else if (currentChar == '.')
     {
         token.type = END_OF_LINE;
-        token.value[i++] = (char) currentChar;
+        token.value[i++] = (char)currentChar;
         token.value[i] = '\0';
         getNextChar();
     }
     else if (currentChar == ',')
     {
         token.type = COMMA;
-        token.value[i++] = (char) currentChar;
+        token.value[i++] = (char)currentChar;
         token.value[i] = '\0';
         getNextChar();
     }
@@ -323,9 +321,11 @@ int main(int argc, char *argv[])
     char *sourceFile;
     char *outputFile;
 
+    int isFirstTokenMinus = 0;
+    int elementCount = 0;
+
     if (argc != 3)
     {
-        // Default source and output file paths
         sourceFile = "../src/code.sta";
         outputFile = "../src/code.lex";
     }
@@ -340,13 +340,53 @@ int main(int argc, char *argv[])
     openFiles(sourceFile, outputFile);
 
     getNextChar();
+
     while (!feof(sourceFilePtr))
     {
-        currentToken = getNextToken();
-        printTokenToSourceFile(currentToken);
+        if (elementCount == 0)
+        {
+            currentToken = getNextToken();
+
+            if (currentToken.type == OPERATOR && currentToken.value[0] == '-')
+            {
+                isFirstTokenMinus = 1;
+                elementCount = 1;
+            }
+            else
+            {
+                printTokenToSourceFile(currentToken);
+                elementCount = 2;
+            }
+        }
+        else if (elementCount == 1)
+        {
+            Token previousToken = currentToken;
+            currentToken = getNextToken();
+            if (currentToken.type == INT_CONST)
+            {
+                Token token;
+                token.type = INT_CONST;
+                token.value[0] = '0';
+                token.value[1] = '\0';
+                printTokenToSourceFile(token);
+                elementCount = 2;
+            }
+            else
+            {
+                printTokenToSourceFile(previousToken);
+                printTokenToSourceFile(currentToken);
+                elementCount = 2;
+            }
+        }
+        else
+        {
+            currentToken = getNextToken();
+            printTokenToSourceFile(currentToken);
+        }
+
+        controlBracketNumber(bracketCount);
     }
 
-    controlBracketNumber(bracketCount);
     closeFiles();
     return 0;
 }
