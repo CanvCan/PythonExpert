@@ -52,6 +52,7 @@ FILE *sourceFilePtr;
 FILE *outputFilePtr;
 int currentChar;
 Token currentToken;
+// int bracketCount = 0;
 
 void openFiles(char *sourceFileName, char *outputFileName)
 {
@@ -80,35 +81,35 @@ void printTokenToSourceFile(Token token)
 {
     switch (token.type)
     {
-        case IDENTIFIER:
-            fprintf(outputFilePtr, "Identifier: %s\n", token.value);
-            break;
-        case INT_CONST:
-            fprintf(outputFilePtr, "Integer constant: %s\n", token.value);
-            break;
-        case OPERATOR:
-            fprintf(outputFilePtr, "Operator: %s\n", token.value);
-            break;
-        case LEFT_CURLY_BRACKET:
-            fprintf(outputFilePtr, "Left curly bracket: %s\n", token.value);
-            break;
-        case RIGHT_CURLY_BRACKET:
-            fprintf(outputFilePtr, "Right curly bracket: %s\n", token.value);
-            break;
-        case STRING_CONST:
-            fprintf(outputFilePtr, "String constant: %s\n", token.value);
-            break;
-        case KEYWORD:
-            fprintf(outputFilePtr, "Keyword: %s\n", token.value);
-            break;
-        case END_OF_LINE:
-            fprintf(outputFilePtr, "End of line: %s\n", token.value);
-            break;
-        case COMMA:
-            fprintf(outputFilePtr, "Comma: %s\n", token.value);
-            break;
-        default:
-            break;
+    case IDENTIFIER:
+        fprintf(outputFilePtr, "Identifier: %s\n", token.value);
+        break;
+    case INT_CONST:
+        fprintf(outputFilePtr, "Integer constant: %s\n", token.value);
+        break;
+    case OPERATOR:
+        fprintf(outputFilePtr, "Operator: %s\n", token.value);
+        break;
+    case LEFT_CURLY_BRACKET:
+        fprintf(outputFilePtr, "Left curly bracket: %s\n", token.value);
+        break;
+    case RIGHT_CURLY_BRACKET:
+        fprintf(outputFilePtr, "Right curly bracket: %s\n", token.value);
+        break;
+    case STRING_CONST:
+        fprintf(outputFilePtr, "String constant: %s\n", token.value);
+        break;
+    case KEYWORD:
+        fprintf(outputFilePtr, "Keyword: %s\n", token.value);
+        break;
+    case END_OF_LINE:
+        fprintf(outputFilePtr, "End of line: %s\n", token.value);
+        break;
+    case COMMA:
+        fprintf(outputFilePtr, "Comma: %s\n", token.value);
+        break;
+    default:
+        break;
     }
 }
 
@@ -174,7 +175,7 @@ void skipComments()
     }
 }
 
-void controlBracketNumber(int bracketCount)
+/*void controlBracketNumber(int bracketCount)
 {
     if (bracketCount > 0)
     {
@@ -187,8 +188,7 @@ void controlBracketNumber(int bracketCount)
         exit(EXIT_FAILURE);
     }
 }
-
-int bracketCount = 0;
+*/
 
 Token getNextToken()
 {
@@ -274,7 +274,7 @@ Token getNextToken()
         token.type = LEFT_CURLY_BRACKET;
         token.value[i++] = (char)currentChar;
         token.value[i] = '\0';
-        bracketCount++;
+        // bracketCount++;
         getNextChar();
     }
     else if (currentChar == '}')
@@ -282,12 +282,11 @@ Token getNextToken()
         token.type = RIGHT_CURLY_BRACKET;
         token.value[i++] = (char)currentChar;
         token.value[i] = '\0';
-        bracketCount--;
+        // bracketCount--;
         getNextChar();
     }
     else if (currentChar == '+' || currentChar == '-' || currentChar == '*' || currentChar == '/')
     {
-        printf("Current char: %c\n", currentChar);
         token.type = OPERATOR;
         token.value[i++] = (char)currentChar;
         token.value[i] = '\0';
@@ -326,7 +325,7 @@ int main(int argc, char *argv[])
 
     if (argc != 3)
     {
-        sourceFile = "../src/code.sta";
+        sourceFile = "../src/code.sta1";
         outputFile = "../src/code.lex";
     }
     else
@@ -337,8 +336,8 @@ int main(int argc, char *argv[])
 
     printf("Source file: %s\n", sourceFile);
     printf("Output file: %s\n", outputFile);
-    openFiles(sourceFile, outputFile);
 
+    openFiles(sourceFile, outputFile);
     getNextChar();
 
     while (!feof(sourceFilePtr))
@@ -384,7 +383,7 @@ int main(int argc, char *argv[])
             printTokenToSourceFile(currentToken);
         }
 
-        controlBracketNumber(bracketCount);
+        // controlBracketNumber(bracketCount);
     }
 
     closeFiles();
